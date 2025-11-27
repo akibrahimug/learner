@@ -1,4 +1,4 @@
-import { PricingTable } from "@clerk/nextjs";
+import {PricingTable} from "@clerk/nextjs";
 import { Suspense } from "react";
 
 const PricingTableWrapper = () => {
