@@ -19,26 +19,34 @@ export const createCompanion = async (formData: CreateCompanion) => {
 }
 
 export const getAllCompanions = async ({ limit = 10, page = 1, subject, topic }: GetAllCompanions) => {
-    const supabase = createSupabaseClient();
+    try {
+        const supabase = createSupabaseClient();
 
-    let query = supabase.from('companions').select();
+        let query = supabase.from('companions').select();
 
-    if(subject && topic) {
-        query = query.ilike('subject', `%${subject}%`)
-            .or(`topic.ilike.%${topic}%,name.ilike.%${topic}%`)
-    } else if(subject) {
-        query = query.ilike('subject', `%${subject}%`)
-    } else if(topic) {
-        query = query.or(`topic.ilike.%${topic}%,name.ilike.%${topic}%`)
+        if(subject && topic) {
+            query = query.ilike('subject', `%${subject}%`)
+                .or(`topic.ilike.%${topic}%,name.ilike.%${topic}%`)
+        } else if(subject) {
+            query = query.ilike('subject', `%${subject}%`)
+        } else if(topic) {
+            query = query.or(`topic.ilike.%${topic}%,name.ilike.%${topic}%`)
+        }
+
+        query = query.range((page - 1) * limit, page * limit - 1);
+
+        const { data: companions, error } = await query;
+
+        if(error) {
+            console.error('Error fetching companions:', error.message);
+            return [];
+        }
+
+        return companions || [];
+    } catch (error) {
+        console.error('Unexpected error in getAllCompanions:', error);
+        return [];
     }
-
-    query = query.range((page - 1) * limit, page * limit - 1);
-
-    const { data: companions, error } = await query;
-
-    if(error) throw new Error(error.message);
-
-    return companions;
 }
 
 export const getCompanion = async (id: string) => {
@@ -69,16 +77,26 @@ export const addToSessionHistory = async (companionId: string) => {
 }
 
 export const getRecentSessions = async (limit = 10) => {
-    const supabase = createSupabaseClient();
-    const { data, error } = await supabase
-        .from('session_history')
-        .select(`companions:companion_id (*)`)
-        .order('created_at', { ascending: false })
-        .limit(limit)
+    try {
+        const supabase = createSupabaseClient();
+        const { data, error } = await supabase
+            .from('session_history')
+            .select(`companions:companion_id (*)`)
+            .order('created_at', { ascending: false })
+            .limit(limit)
 
-    if(error) throw new Error(error.message);
+        if(error) {
+            console.error('Error fetching recent sessions:', error.message);
+            return [];
+        }
 
-    return data.map(({ companions }) => companions);
+        if (!data) return [];
+
+        return data.map(({ companions }) => companions).filter(Boolean);
+    } catch (error) {
+        console.error('Unexpected error in getRecentSessions:', error);
+        return [];
+    }
 }
 
 export const getUserSessions = async (userId: string, limit = 10) => {
