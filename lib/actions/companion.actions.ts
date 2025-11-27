@@ -126,35 +126,48 @@ export const getUserCompanions = async (userId: string) => {
 }
 
 export const newCompanionPermissions = async () => {
-    const { userId, has } = await auth();
-    const supabase = createSupabaseClient();
-
-    let limit = 3; // Default limit for free users
-
     try {
-        // Check if user has subscription features
-        if(has && has({ plan: 'pro' })) {
-            return true;
-        } else if(has && has({ feature: "3_companion_limit" })) {
-            limit = 3;
-        } else if(has && has({ feature: "10_companion_limit" })) {
-            limit = 10;
+        const { userId, has } = await auth();
+
+        if (!userId) {
+            console.error('No user ID found');
+            return true; // Allow creation if auth check fails
         }
+
+        const supabase = createSupabaseClient();
+        let limit = 3; // Default limit for free users
+
+        try {
+            // Check if user has subscription features
+            if(has && has({ plan: 'pro' })) {
+                return true;
+            } else if(has && has({ feature: "3_companion_limit" })) {
+                limit = 3;
+            } else if(has && has({ feature: "10_companion_limit" })) {
+                limit = 10;
+            }
+        } catch (error) {
+            // Fallback to default limit if Clerk subscription check fails
+            console.error('Clerk subscription check failed, using default limit:', error);
+        }
+
+        const { data, error } = await supabase
+            .from('companions')
+            .select('id', { count: 'exact' })
+            .eq('author', userId)
+
+        if(error) {
+            console.error('Error checking companion count:', error.message);
+            return true; // Allow creation if database check fails
+        }
+
+        const companionCount = data?.length || 0;
+
+        return companionCount < limit;
     } catch (error) {
-        // Fallback to default limit if Clerk subscription check fails
-        console.error('Clerk subscription check failed, using default limit:', error);
+        console.error('Unexpected error in newCompanionPermissions:', error);
+        return true; // Fail open - allow creation on error
     }
-
-    const { data, error } = await supabase
-        .from('companions')
-        .select('id', { count: 'exact' })
-        .eq('author', userId)
-
-    if(error) throw new Error(error.message);
-
-    const companionCount = data?.length || 0;
-
-    return companionCount < limit;
 }
 
 // Bookmarks
