@@ -1,5 +1,12 @@
 ## Learner — Real‑time AI Teaching Platform
 
+![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Clerk](https://img.shields.io/badge/Clerk-Auth-6C47FF?style=for-the-badge&logo=clerk&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-DB-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
+
 Learner is a Next.js 15 app that lets users build voice‑based "companions" (AI tutors) and run real‑time teaching sessions. It combines Clerk for auth and subscriptions, Supabase for storage, and Vapi for live voice AI.
 
 ## 🚀 Quick Start
@@ -46,6 +53,11 @@ npm run dev
 ## 🛠 Technology Stack
 
 ### Frontend
+![Next.js](https://img.shields.io/badge/Next.js-15-000000?style=flat-square&logo=next.js&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)
+
 - **Next.js 15** - App Router with Server Components and Server Actions
 - **React 19** - Latest React features with modern hooks
 - **TypeScript** - Type-safe development
@@ -54,16 +66,25 @@ npm run dev
 - **React Hook Form + Zod** - Form validation and management
 
 ### Backend & Services
+![Clerk](https://img.shields.io/badge/Clerk-6C47FF?style=flat-square&logo=clerk&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=flat-square&logo=supabase&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=flat-square&logo=postgresql&logoColor=white)
+
 - **Clerk** - Authentication and subscription management
 - **Supabase** - PostgreSQL database with REST API
 - **Vapi** - Real-time voice AI (WebRTC, ASR, TTS)
 
 ### Voice AI Stack (via Vapi)
+![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=flat-square&logo=openai&logoColor=white)
+
 - **Deepgram Nova-3** - Speech-to-text transcription
 - **ElevenLabs** - Text-to-speech synthesis
 - **OpenAI GPT-4** - Conversational AI model
 
 ### Development
+![ESLint](https://img.shields.io/badge/ESLint-4B32C3?style=flat-square&logo=eslint&logoColor=white)
+![npm](https://img.shields.io/badge/npm-CB3837?style=flat-square&logo=npm&logoColor=white)
+
 - **ESLint** - Code linting
 - **Turbopack** - Fast development builds
 
