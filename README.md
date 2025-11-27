@@ -1,6 +1,71 @@
 ## Learner — Real‑time AI Teaching Platform
 
-Learner is a Next.js 15 app that lets users build voice‑based “companions” (AI tutors) and run real‑time teaching sessions. It combines Clerk for auth and subscriptions, Supabase for storage, and Vapi for live voice AI.
+Learner is a Next.js 15 app that lets users build voice‑based "companions" (AI tutors) and run real‑time teaching sessions. It combines Clerk for auth and subscriptions, Supabase for storage, and Vapi for live voice AI.
+
+## 🚀 Quick Start
+
+```bash
+# 1. Install dependencies
+npm install
+
+# 2. Set up environment variables
+cp .env.local.example .env.local
+# Edit .env.local with your keys (see Environment variables section)
+
+# 3. Run development server
+npm run dev
+
+# 4. Open in browser
+# http://localhost:3000
+```
+
+**Note:** You'll need accounts with Clerk, Supabase, and Vapi to run the app. See detailed setup instructions below.
+
+## 📋 Table of Contents
+
+- [Features at a Glance](#-features-at-a-glance)
+- [Technology Stack](#-technology-stack)
+- [Getting Started](#getting-started-local)
+- [Environment Variables](#environment-variables)
+- [Data Model](#data-model-supabase)
+- [Architecture](#architecture)
+- [Deployment](#deployment)
+- [Troubleshooting](#troubleshooting)
+- [Development Tips](#development-tips)
+
+## ⚡ Features at a Glance
+
+- ✅ Create AI voice companions for any subject (math, science, languages, etc.)
+- ✅ Real-time voice sessions with transcripts and audio controls
+- ✅ Search and filter companion library by subject and topic
+- ✅ Session history tracking and bookmarks
+- ✅ Subscription tiers with usage limits (free: 3 companions, pro: unlimited)
+- ✅ Production-ready error handling and graceful degradation
+- ✅ Full authentication with Clerk (email, social, passkeys)
+
+## 🛠 Technology Stack
+
+### Frontend
+- **Next.js 15** - App Router with Server Components and Server Actions
+- **React 19** - Latest React features with modern hooks
+- **TypeScript** - Type-safe development
+- **Tailwind CSS 4** - Utility-first styling
+- **Shadcn/ui** - Accessible component primitives
+- **React Hook Form + Zod** - Form validation and management
+
+### Backend & Services
+- **Clerk** - Authentication and subscription management
+- **Supabase** - PostgreSQL database with REST API
+- **Vapi** - Real-time voice AI (WebRTC, ASR, TTS)
+
+### Voice AI Stack (via Vapi)
+- **Deepgram Nova-3** - Speech-to-text transcription
+- **ElevenLabs** - Text-to-speech synthesis
+- **OpenAI GPT-4** - Conversational AI model
+
+### Development
+- **ESLint** - Code linting
+- **Turbopack** - Fast development builds
 
 ### Why this setup
 
@@ -134,17 +199,68 @@ Notes:
 ## Getting started (local)
 
 1. Clone repo and install deps
-   - `npm i` or `yarn` or `pnpm i`
+   ```bash
+   npm i
+   # or
+   yarn
+   # or
+   pnpm i
+   ```
+
 2. Configure Supabase
-   - Create project, run the SQL schema above, copy URL and anon key
+   - Create a new Supabase project
+   - Run the SQL schema (see Data model section above)
+   - Copy your project URL and anon key
+   - Add to `.env.local`
+
 3. Configure Clerk
-   - Create app, enable Email/Passkey/Social as desired, copy publishable and secret keys
-   - Ensure `http://localhost:3000` is an allowed origin/redirect
+   - Create a new Clerk application
+   - Enable authentication methods (Email/Passkey/Social)
+   - Copy publishable and secret keys
+   - Add `http://localhost:3000` to allowed origins/redirects
+   - Add to `.env.local`
+
+   **Optional - Subscriptions:**
+   - Go to Clerk Dashboard → Subscriptions
+   - Create pricing plans with entitlements:
+     - Plan: `pro` (unlimited companions)
+     - Feature: `3_companion_limit`
+     - Feature: `10_companion_limit`
+   - Configure checkout URLs
+   - Note: The app works without this; defaults to 3 companion limit
+
 4. Configure Vapi
-   - Create a web token and add `NEXT_PUBLIC_VAPI_WEB_TOKEN`
-5. Create `.env.local` using the variables above
+   - Create a Vapi account
+   - Generate a web token
+   - Add `NEXT_PUBLIC_VAPI_WEB_TOKEN` to `.env.local`
+
+5. Create `.env.local` file (see Environment variables section)
+
 6. Run the app
-   - `npm run dev` → open `http://localhost:3000`
+   ```bash
+   npm run dev
+   ```
+   - Open `http://localhost:3000`
+
+## Deployment
+
+### Build for production
+```bash
+npm run build
+npm start
+```
+
+### Deploy to Vercel (recommended)
+1. Push your code to GitHub
+2. Import project in Vercel
+3. Add environment variables from `.env.local`
+4. Deploy
+
+### Important production notes
+- The app includes error boundaries for graceful degradation
+- Subscription features are optional; app defaults to free tier limits
+- Ensure all environment variables are set in production
+- TypeScript/ESLint errors are ignored during build (see `next.config.ts`)
 
 ## Notable implementation details
 
@@ -182,6 +298,73 @@ types/                   # Shared types (incl. Vapi message types)
 - Use `configureAssistant` as the single place to tune voice, model, and prompt
 - Entitlement names (`pro`, `3_companion_limit`, `10_companion_limit`) must match your Clerk setup
 
+## Troubleshooting
+
+### Production Error: `Cannot read properties of undefined (reading 'checkoutUrls')`
+
+**Cause:** Clerk's `PricingTable` component requires subscription plans to be configured in the Clerk Dashboard.
+
+**Solution:** The app includes fallback handling for this:
+- `app/subscription/page.tsx` shows a fallback UI when subscriptions aren't configured
+- `app/subscription/error.tsx` catches and handles subscription errors gracefully
+- `lib/actions/companion.actions.ts` defaults to 3 companion limit if subscription checks fail
+
+**To fully enable subscriptions:**
+1. Go to Clerk Dashboard → Subscriptions
+2. Create pricing plans with the entitlements listed above
+3. Configure checkout URLs
+4. Redeploy your app
+
+### Server Components Render Errors
+
+**Cause:** Missing environment variables or service configuration issues.
+
+**Solution:**
+- Verify all environment variables are set in production
+- Check Clerk, Supabase, and Vapi are properly configured
+- Review error boundaries in `app/subscription/error.tsx`
+- Enable detailed error logging by checking production logs
+
+### Companion Creation Fails
+
+**Cause:** Database permissions or missing Supabase configuration.
+
+**Solution:**
+1. Verify Supabase tables exist (run SQL schema)
+2. Check RLS policies allow authenticated users to insert
+3. Ensure `NEXT_PUBLIC_SUPABASE_ANON_KEY` is set
+4. Check server logs for specific error messages
+
+### Voice Session Not Working
+
+**Cause:** Missing or invalid Vapi configuration.
+
+**Solution:**
+- Verify `NEXT_PUBLIC_VAPI_WEB_TOKEN` is valid
+- Check browser microphone permissions
+- Ensure Vapi account has sufficient credits
+- Review browser console for WebRTC errors
+
+### Build Errors
+
+**Cause:** TypeScript or ESLint validation failures.
+
+**Current behavior:** Build errors are ignored (see `next.config.ts`)
+
+**To enable strict checking:**
+```typescript
+// next.config.ts
+const nextConfig: NextConfig = {
+    typescript: {
+        ignoreBuildErrors: false  // Enable type checking
+    },
+    eslint: {
+        ignoreDuringBuilds: false  // Enable linting
+    },
+    // ... rest of config
+};
+```
+
 ## Roadmap ideas
 
 - Telemetry and quality metrics for sessions
@@ -189,9 +372,41 @@ types/                   # Shared types (incl. Vapi message types)
 - Multi‑party sessions and classroom mode
 - Mobile PWA and offline transcript viewing
 
-## Acknowledgements
+## 📝 Recent Changes
 
-- Clerk for auth and subscriptions
-- Supabase for the database and developer experience
-- Vapi for real‑time voice infrastructure
-- Next.js/Tailwind for the web stack
+### v1.1.0 - Production Error Fixes
+- ✅ Added fallback handling for Clerk subscription configuration
+- ✅ Implemented error boundaries for subscription page
+- ✅ Set default companion limit (3) when subscriptions aren't configured
+- ✅ Added comprehensive troubleshooting documentation
+- ✅ Improved error handling in `newCompanionPermissions`
+
+## 📄 License
+
+This project is for educational purposes. See individual service providers (Clerk, Supabase, Vapi) for their respective terms of service.
+
+## 🙏 Acknowledgements
+
+- **Clerk** - Authentication and subscription infrastructure
+- **Supabase** - Database and developer experience
+- **Vapi** - Real-time voice AI platform
+- **Next.js & Vercel** - Web framework and deployment
+- **Tailwind CSS** - Styling system
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit issues or pull requests.
+
+### Development Guidelines
+1. Keep database access in Server Actions
+2. Use TypeScript for type safety
+3. Follow existing code structure and patterns
+4. Test locally before submitting PRs
+5. Update documentation for new features
+
+## 📧 Support
+
+For issues or questions:
+- Open an issue on GitHub
+- Check the [Troubleshooting](#troubleshooting) section
+- Review service provider documentation (Clerk, Supabase, Vapi)
