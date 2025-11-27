@@ -111,14 +111,20 @@ export const newCompanionPermissions = async () => {
     const { userId, has } = await auth();
     const supabase = createSupabaseClient();
 
-    let limit = 0;
+    let limit = 3; // Default limit for free users
 
-    if(has({ plan: 'pro' })) {
-        return true;
-    } else if(has({ feature: "3_companion_limit" })) {
-        limit = 3;
-    } else if(has({ feature: "10_companion_limit" })) {
-        limit = 10;
+    try {
+        // Check if user has subscription features
+        if(has && has({ plan: 'pro' })) {
+            return true;
+        } else if(has && has({ feature: "3_companion_limit" })) {
+            limit = 3;
+        } else if(has && has({ feature: "10_companion_limit" })) {
+            limit = 10;
+        }
+    } catch (error) {
+        // Fallback to default limit if Clerk subscription check fails
+        console.error('Clerk subscription check failed, using default limit:', error);
     }
 
     const { data, error } = await supabase
@@ -128,13 +134,9 @@ export const newCompanionPermissions = async () => {
 
     if(error) throw new Error(error.message);
 
-    const companionCount = data?.length;
+    const companionCount = data?.length || 0;
 
-    if(companionCount >= limit) {
-        return false
-    } else {
-        return true;
-    }
+    return companionCount < limit;
 }
 
 // Bookmarks
